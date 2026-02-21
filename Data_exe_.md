@@ -1,130 +1,163 @@
-🔐 Linux Hardening Audit Report
+# 🔐 Linux Hardening Audit Report
 
-Author: Mohammed Nihal
-Platform: Kali Linux (VirtualBox – Oracle VM)
-Kernel Version: 6.18.9-kali
-Audit Date: 21 Feb 2026
+**Author:** Mohammed Nihal  
+**Platform:** Kali Linux (VirtualBox – Oracle VM)  
+**Kernel Version:** 6.18.9-kali  
+**Audit Date:** 21 Feb 2026  
 
-1️⃣ Objective
+---
 
-The objective of this project was to design and implement a Linux Hardening Audit Tool to evaluate system security configuration against CIS-style best practices. The tool audits firewall status, SSH hardening, file permissions, rootkit presence, running services, and system updates, generating a compliance score and risk classification.
+## 📌 1️⃣ Objective
 
-2️⃣ Environment Setup
+The objective of this project was to design and implement a **Linux Hardening Audit Tool** to evaluate system security configuration against CIS-style best practices.
 
-The audit was performed on a Kali Linux virtual machine configured in Oracle VirtualBox. The following security tools were installed and configured:
+The tool audits:
 
-UFW (Firewall)
+- Firewall status  
+- SSH hardening  
+- File permissions  
+- Rootkit presence  
+- Running services  
+- System updates  
 
-OpenSSH Server
+It generates a **compliance score** and **risk classification**.
 
-chkrootkit
+---
 
-rkhunter
+## 🖥 2️⃣ Environment Setup
 
-Lynis
+The audit was performed on a **Kali Linux Virtual Machine** configured in **Oracle VirtualBox**.
 
-auditd
+### 🔧 Installed & Configured Tools
 
-fail2ban
+- UFW (Firewall)
+- OpenSSH Server
+- chkrootkit
+- rkhunter
+- Lynis
+- auditd
+- fail2ban
+- net-tools
 
-net-tools
+All packages were successfully installed and updated using:
 
-All packages were successfully installed and updated using apt.
+```bash
+sudo apt update
+sudo apt upgrade -y
+```
 
-SSH service was enabled and confirmed running via systemctl status ssh.
+SSH service was enabled and verified:
 
-3️⃣ Firewall Configuration
+```bash
+sudo systemctl status ssh
+```
+
+---
+
+## 🔥 3️⃣ Firewall Configuration
 
 The UFW firewall was enabled and configured.
 
-Command executed:
+### Commands Executed
 
+```bash
 sudo ufw enable
 sudo ufw status
+```
 
-Findings:
+### Findings
 
-Firewall status: Active
+- ✅ Firewall status: **Active**
+- ✅ Port 22 (SSH) allowed
+- ❌ Port 80 denied
+- 🚫 Custom deny rule applied for external IP
 
-Port 22 (SSH) allowed
+Firewall protection is active and enforced.
 
-Port 80 denied
+---
 
-Custom deny rule for external IP
+## 🔐 4️⃣ SSH Security Assessment
 
-Firewall configuration is properly active and enforced.
+**Configuration File:**
 
-4️⃣ SSH Security Assessment
-
-SSH configuration file:
+```
 /etc/ssh/sshd_config
+```
 
-Current settings identified:
+### Current Settings Identified
 
+```
 PermitRootLogin yes
 PasswordAuthentication yes
-Security Impact:
+```
 
-Root login enabled → Security risk
+### ⚠ Security Impact
 
-Password authentication enabled → Brute-force risk
+- Root login enabled → High security risk  
+- Password authentication enabled → Brute-force risk  
 
-SSH service was confirmed running and listening on port 22 via netstat -tulnp.
+SSH service confirmed running and listening on port 22:
 
-5️⃣ Rootkit and Malware Scan
-chkrootkit Scan
+```bash
+netstat -tulnp
+```
 
-Executed without root privileges initially, then properly audited.
+---
 
-Results:
+## 🛡 5️⃣ Rootkit & Malware Scan
 
-No rootkits detected
+### 🔎 chkrootkit Scan
 
-All tested binaries reported “not infected”
+- Initially executed without root privileges
+- Re-executed properly with sudo
 
-rkhunter Installation
+**Results:**
+- No rootkits detected
+- All binaries reported *"not infected"*
 
-Installed successfully
+---
 
-Rootkit Hunter version 1.4.6 configured
+### 🔎 rkhunter
 
-No malicious indicators detected.
+- Successfully installed
+- Version: 1.4.6 configured
+- No malicious indicators detected
 
-6️⃣ Lynis System Audit
+---
 
-Lynis version 3.1.6 was executed:
+## 📊 6️⃣ Lynis System Audit
 
+Lynis Version: **3.1.6**
+
+```bash
 sudo lynis audit system
+```
 
-System identified as:
+### System Identified
 
-OS: Kali Linux (Rolling)
+- OS: Kali Linux (Rolling)
+- Architecture: x86_64
+- Kernel: 6.18.9-kali
 
-Architecture: x86_64
+Lynis completed successfully and provided hardening recommendations focused on SSH and authentication security.
 
-Kernel: 6.18.9-kali
+---
 
-Lynis completed successfully with standard hardening recommendations for SSH and authentication.
+## 🤖 7️⃣ Custom Python Audit Tool Results
 
-7️⃣ Custom Python Audit Tool Results
+The developed audit tool performed automated checks on:
 
-The developed tool performed automated checks on:
+- Firewall status
+- SSH root login
+- SSH password authentication
+- File permissions (`/etc/shadow`)
+- Insecure services
+- Rootkit detection
+- Pending updates
 
-Firewall status
+### 📄 Output
 
-SSH root login
-
-SSH password authentication
-
-File permissions (/etc/shadow)
-
-Insecure services
-
-Rootkit detection
-
-Pending updates
-
-Output:
+```
 [PASS] Firewall is active
 [FAIL] Root login enabled
 [WARN] Password authentication enabled
@@ -132,46 +165,90 @@ Output:
 [PASS] No insecure services detected
 [PASS] No rootkit detected
 [WARN] Updates available
-Security Score:
+```
 
-57.14%
+---
 
-Risk Level:
+## 📈 Security Score
 
-MEDIUM
+**57.14%**
 
-8️⃣ Identified Security Gaps
-Issue	Risk Level	Recommendation
-Root SSH login enabled	High	Set PermitRootLogin no
-Password authentication enabled	Medium	Disable & use key-based authentication
-Pending updates	Medium	Run full system upgrade
-SSH open to all networks	Medium	Restrict allowed IPs
-9️⃣ Hardening Recommendations
+### 🚨 Risk Level: MEDIUM
 
-Disable SSH root login:
+---
 
+## ⚠ 8️⃣ Identified Security Gaps
+
+| Issue | Risk Level | Recommendation |
+|--------|------------|----------------|
+| Root SSH login enabled | High | Set `PermitRootLogin no` |
+| Password authentication enabled | Medium | Disable & use key-based authentication |
+| Pending updates | Medium | Run full system upgrade |
+| SSH open to all networks | Medium | Restrict allowed IPs |
+
+---
+
+## 🛠 9️⃣ Hardening Recommendations
+
+### Disable SSH Root Login
+
+```
 PermitRootLogin no
+```
 
-Disable password authentication:
+### Disable Password Authentication
 
+```
 PasswordAuthentication no
+```
 
-Restart SSH:
+### Restart SSH
 
+```bash
 sudo systemctl restart ssh
+```
 
-Apply pending updates:
+### Apply Pending Updates
 
+```bash
 sudo apt upgrade -y
+```
 
-Configure Fail2Ban to prevent brute-force attacks.
+### Additional Recommendations
 
-🔟 Conclusion
+- Configure **Fail2Ban** to prevent brute-force attacks  
+- Restrict SSH access to trusted IP addresses  
+- Perform periodic rootkit scans  
+- Conduct regular system audits  
 
-The Linux Hardening Audit Tool successfully evaluated system security posture and provided a quantifiable compliance score.
+---
 
-The system currently falls under Medium Risk (57.14%), primarily due to insecure SSH configuration and pending updates.
+## 🔟 Conclusion
 
-Firewall configuration and rootkit integrity checks passed successfully, indicating no malware presence and active network protection.
+The Linux Hardening Audit Tool successfully evaluated system security posture and generated a quantifiable compliance score.
 
-After implementing recommended hardening measures, the expected security score would exceed 80%, placing the system in a Low Risk category.
+The system currently falls under **Medium Risk (57.14%)**, primarily due to:
+
+- Insecure SSH configuration  
+- Pending system updates  
+
+Firewall configuration and rootkit integrity checks passed successfully, indicating:
+
+- Active network protection  
+- No malware presence  
+
+After implementing the recommended hardening measures, the expected security score would exceed **80%**, placing the system in the **Low Risk category**.
+
+---
+
+## 🚀 Project Outcome
+
+- Custom automated Linux audit tool developed  
+- Real-time security validation performed  
+- Practical hardening measures identified  
+- Version-controlled via GitHub  
+
+---
+
+**Author:** Mohammed Nihal  
+Cybersecurity Enthusiast | Linux Security | Ethical Hacking
