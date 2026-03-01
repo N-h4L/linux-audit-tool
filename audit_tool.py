@@ -1,3 +1,7 @@
+import platform
+import datetime
+import socket
+import json
 import os
 import subprocess
 
@@ -17,6 +21,16 @@ def run_command(cmd):
     except:
         return ""
 
+def system_info():
+    info = {
+        "Hostname": socket.gethostname(),
+        "OS": platform.system(),
+        "OS Version": platform.version(),
+        "Kernel": platform.release(),
+        "Audit Time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    return info
+
 def check_firewall():
     global score
     result = run_command("ufw status")
@@ -25,6 +39,7 @@ def check_firewall():
         score += 1
     else:
         report.append(RED + "[FAIL] Firewall is not active" + END)
+        report.append(YELLOW + "  → Recommendation: Enable firewall using 'sudo ufw enable'" + END)
 
 def check_ssh_root():
     global score
@@ -35,6 +50,7 @@ def check_ssh_root():
             score += 1
         else:
             report.append(RED + "[FAIL] Root login enabled" + END)
+            report.append(YELLOW + "  → Recommendation: Set 'PermitRootLogin no' in /etc/ssh/sshd_config" + END)
 
 def check_ssh_password():
     global score
@@ -45,6 +61,7 @@ def check_ssh_password():
             score += 1
         else:
             report.append(YELLOW + "[WARN] Password authentication enabled" + END)
+            report.append(YELLOW + "  → Recommendation: Set 'PasswordAuthentication no' and use SSH keys" + END)
 
 def check_shadow_permissions():
     global score
@@ -81,6 +98,7 @@ def check_updates():
         score += 1
     else:
         report.append(YELLOW + "[WARN] Updates available" + END)
+        report.append(YELLOW + "  → Recommendation: Run 'sudo apt upgrade -y'" + END)
 
 check_firewall()
 check_ssh_root()
@@ -93,10 +111,65 @@ check_updates()
 final_score = (score / total_checks) * 100
 
 print("\n===== Linux Hardening Audit Report =====\n")
+
+info = system_info()
+for key, value in info.items():
+    print(f"{key}: {value}")
+
+print("\n----------------------------------------\n")
+
 for item in report:
     print(item)
 
 print("\nSecurity Score: {:.2f}%".format(final_score))
+
+audit_data = {
+    "system_info": system_info(),
+    "results": report,
+    "score": final_score
+}
+
+with open("audit_report.json", "w") as f:
+    json.dump(audit_data, f, indent=4)
+
+# ---------------- HTML EXPORT ----------------
+
+html_content = f"""
+<html>
+<head>
+    <title>Linux Hardening Audit Report</title>
+    <style>
+        body {{ font-family: Arial; }}
+        .pass {{ color: green; }}
+        .fail {{ color: red; }}
+        .warn {{ color: orange; }}
+    </style>
+</head>
+<body>
+    <h1>Linux Hardening Audit Report</h1>
+    <h2>System Information</h2>
+    <ul>
+"""
+
+for key, value in system_info().items():
+    html_content += f"<li><b>{key}:</b> {value}</li>"
+
+html_content += "</ul><h2>Audit Results</h2><ul>"
+
+for item in report:
+    html_content += f"<li>{item}</li>"
+
+html_content += f"""
+    </ul>
+    <h2>Final Score: {final_score:.2f}%</h2>
+</body>
+</html>
+"""
+
+with open("audit_report.html", "w") as f:
+    f.write(html_content)
+
+print("\nHTML report generated: audit_report.html")
 
 if final_score >= 80:
     print(GREEN + "Risk Level: LOW" + END)
